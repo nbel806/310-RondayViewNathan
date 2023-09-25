@@ -48,6 +48,8 @@ public class FragmentHome extends Fragment {
         adapter = new SwipeAdapter(getContext(), events);
         koloda.setAdapter(adapter);
 
+
+
         /**
          * Koloda interface listener functions, don't need to use ALL
          */
@@ -160,7 +162,6 @@ public class FragmentHome extends Fragment {
             koloda.setVisibility(View.VISIBLE);
             buttonContainer.setVisibility(View.VISIBLE);
             fetchEventData(); // fetch data again
-            koloda.reloadAdapterData();
         });
 
         return rootView;
@@ -181,9 +182,11 @@ public class FragmentHome extends Fragment {
                 }
                 // Re-notify the adapter when the event data changed
                 adapter.notifyDataSetChanged();
+                koloda.reloadAdapterData();
             } else {
                 Log.e("Database error", "Fetching of events not working properly");
             }
+            removeDuplicateEvents();
         });
     }
 
@@ -226,6 +229,7 @@ public class FragmentHome extends Fragment {
      * @param index - the particular event index
      */
     private void handleSwipe(boolean isInterested, int index) {
+        removeDuplicateEvents();
         currentEventIndex = index;
         if (isInterested) {
             FireBaseUserDataManager.getInstance().addInterestedEvent(events.get(currentEventIndex));
@@ -241,6 +245,24 @@ public class FragmentHome extends Fragment {
         }
         nextEvent();
         Toast.makeText(getContext(), isInterested ? "Interested" : "Not Interested", Toast.LENGTH_SHORT).show();
+    }
+
+    private void removeDuplicateEvents() {
+        // Create a new ArrayList
+        ArrayList<Event> newEventsList = new ArrayList<Event>();
+
+        // Traverse through the first list
+        for (Event element : events) {
+
+            if (!newEventsList.contains(element)) {
+
+                newEventsList.add(element);
+            }
+        }
+        events = newEventsList;
+        currentEventIndex = 0;
+        adapter.notifyDataSetChanged();
+        koloda.reloadAdapterData();
     }
 
     /**
